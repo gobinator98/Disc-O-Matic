@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Disc-O-Matic — Jobs{% endblock %}
+{% block content %}
+<div class="page">
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:1rem;">
+    <p class="page-title" style="margin:0;">Jobs</p>
+    <div class="pick-group" id="jobFilters">
+      <button class="active" data-filter="all" onclick="filterJobs('all')">All</button>
+      <button data-filter="active" onclick="filterJobs('active')">Active</button>
+      <button data-filter="pending" onclick="filterJobs('pending')">Pending</button>
+      <button data-filter="needs_attention" onclick="filterJobs('needs_attention')">Needs attention</button>
+    </div>
+  </div>
+
+  <div id="jobs-list">
+    {% for j in jobs %}
+    <div class="item-card" data-bucket="{{ j.filter_bucket }}" style="align-items:flex-start;">
+      <div class="main">
+        <p class="title {{ 'muted' if j.title_muted }}">{{ j.title }}</p>
+        <p class="path" style="font-style:normal;">{{ j.device }}{% if j.matched_line %} · {{ j.matched_line }}{% endif %}</p>
+      </div>
+      <div class="side" style="flex-direction:column; align-items:flex-end; gap:6px; min-width:150px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="badge {{ j.status_class }}">{{ j.status_label }}</span>
+          <a href="/jobs/{{ j.id }}" class="view-link">View job<i class="ti ti-arrow-right" style="font-size:14px;" aria-hidden="true"></i></a>
+        </div>
+        {% if j.progress is not none %}
+        <div class="progress-track" style="width:100%;"><div class="progress-fill {{ j.progress_class }}" style="width:{{ j.progress }}%;"></div></div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+<div class="footer-bar">
+  <span>{{ drive_count }} drives detected</span>
+  <span><i class="ti ti-circle-check ok" aria-hidden="true"></i> Up to date · {{ app_version }}</span>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  function filterJobs(bucket) {
+    document.querySelectorAll('#jobFilters button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-filter') === bucket);
+    });
+    document.querySelectorAll('#jobs-list .item-card').forEach(function (card) {
+      var match = bucket === 'all' || card.getAttribute('data-bucket') === bucket;
+      card.style.display = match ? '' : 'none';
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Disc-O-Matic — {{ h.disc_label }}{% endblock %}
+{% block content %}
+<div class="page">
+
+  <a href="/history" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back to History</a>
+
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:2px;">
+    <i class="ti ti-device-tv" style="font-size:22px; color:var(--wordmark);" aria-hidden="true"></i>
+    <span style="font-size:19px; font-weight:700; color:var(--text-primary);">{{ h.disc_label }}</span>
+    <span class="badge {{ 'completed' if h.status == 'completed' else 'failed' }}">{{ h.status }}</span>
+  </div>
+  <p class="meta-line" style="margin:0 0 1.1rem;">{{ h.media }} &nbsp;·&nbsp; {{ h.date }} &nbsp;·&nbsp; Drive {{ h.device }} &nbsp;·&nbsp; Total time {{ h.total_time }}</p>
+
+  <div class="card">
+    <h3><i class="ti ti-list-search" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Identification</h3>
+    <p class="sub">Matched automatically against {{ h.match_source.split(' #')[0] }}.</p>
+    <div class="meta-line" style="font-size:13px;">
+      <span><b>Title:</b> <span style="color:var(--text-primary);">{{ h.match_title }}</span></span>
+      <span><b>Type:</b> {{ h.match_type }}</span>
+      <span><b>Source:</b> {{ h.match_source }}</span>
+      <span><b>Match confidence:</b> {{ h.match_confidence }}</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-list-check" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Titles Ripped</h3>
+    <p class="sub">{{ h.titles|length }} {{ 'episode' if h.titles|length == 1 else 'episodes' }}, all selected titles completed successfully.</p>
+    <div class="row-head">
+      <span class="col-ep">Episode</span>
+      <span class="col-title">Output filename</span>
+      <span class="col-dur">Length</span>
+      <span class="col-size">Size</span>
+    </div>
+    {% for t in h.titles %}
+    <div class="row-item"><span class="col-ep">{{ t.ep }}</span><span class="col-title">{{ t.name }}</span><span class="col-dur">{{ t.dur }}</span><span class="col-size">{{ t.size }}</span></div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;">
+      <h3 style="margin-bottom:0;"><i class="ti ti-settings" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Encoding &amp; Transfer</h3>
+      <span class="profile-badge {{ h.profile }}">{{ h.profile }} profile</span>
+    </div>
+    <p class="sub">{{ 'User-selected settings — differs from the source-matched recommendation.' if h.profile == 'custom' else 'Source-matched recommended settings.' }}</p>
+
+    <div class="param-grid">
+      {% for label, value in h.params.items() %}
+      <div class="param"><span class="label">{{ label }}</span><span class="value">{{ value }}</span></div>
+      {% endfor %}
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-primary); background:var(--bg-input); border:1px solid var(--border-strong); border-radius:6px; padding:8px 10px;">
+      <i class="ti ti-circle-check" style="font-size:16px; color:var(--green); flex-shrink:0;" aria-hidden="true"></i>
+      Transferred to <code style="font-size:12px;">{{ h.transfer_path }}</code> — all {{ h.titles|length }} files verified at destination.
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0;">
+    <h3><i class="ti ti-clock" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Timeline</h3>
+    <div class="meta-line" style="font-size:12.5px;">
+      {% for label, time in h.timeline %}
+      <span><b>{{ label }}:</b> {{ time }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

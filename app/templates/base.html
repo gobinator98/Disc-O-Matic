@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Disc-O-Matic{% endblock %}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Monoton&family=Rubik:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app" class="theme-dark">
+        <div class="header">
+            <a href="/" class="brand">
+                <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="var(--bg-page)" stroke="var(--wordmark)" stroke-width="1.5"/><circle cx="17" cy="17" r="11" fill="none" stroke="var(--wordmark)" stroke-width="0.75" opacity="0.5"/><circle cx="17" cy="17" r="7.5" fill="none" stroke="var(--wordmark)" stroke-width="0.75" opacity="0.5"/><circle cx="17" cy="17" r="3" fill="#d94f30"/></svg>
+                <span class="wordmark">Disc-O-Matic</span>
+            </a>
+            <div class="menu-wrap">
+                <button id="menuToggle" style="width: auto; padding: 0 14px; display: flex; align-items: center; gap: 6px;">Menu <i class="ti ti-chevron-down" style="font-size: 14px;" aria-hidden="true"></i></button>
+                <div id="menuDrop" class="menu-drop">
+                    <a href="/" class="{{ 'active' if active_page == 'dashboard' else '' }}"><i class="ti ti-layout-dashboard" aria-hidden="true"></i>Dashboard</a>
+                    <a href="/jobs" class="{{ 'active' if active_page == 'jobs' else '' }}"><i class="ti ti-list-check" aria-hidden="true"></i>Jobs</a>
+                    <a href="#"><i class="ti ti-disc" aria-hidden="true"></i>Library</a>
+                    <a href="/history" class="{{ 'active' if active_page == 'history' else '' }}"><i class="ti ti-history" aria-hidden="true"></i>History</a>
+                    <a href="/settings" class="{{ 'active' if active_page == 'settings' else '' }}"><i class="ti ti-settings" aria-hidden="true"></i>Settings</a>
+                </div>
+            </div>
+        </div>
+
+        {% block content %}{% endblock %}
+    </div>
+    <script src="/static/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

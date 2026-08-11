@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Disc-O-Matic — Settings{% endblock %}
+{% block content %}
+<div class="page">
+
+  <p class="page-title">Settings</p>
+  <p class="page-sub">App preferences, metadata sources, and updates.</p>
+
+  <div class="card">
+    <h3><i class="ti ti-palette" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Appearance</h3>
+    <div class="setting-row">
+      <div>
+        <div class="label">Theme</div>
+        <div class="desc">Choose how Disc-O-Matic looks. "System" follows your device's setting. Stored in this browser only for now.</div>
+      </div>
+      <div class="pick-group">
+        <button data-theme-pick="light" onclick="discomatic.setTheme('light')"><i class="ti ti-sun" aria-hidden="true"></i>Light</button>
+        <button data-theme-pick="dark" onclick="discomatic.setTheme('dark')"><i class="ti ti-moon" aria-hidden="true"></i>Dark</button>
+        <button data-theme-pick="system" onclick="discomatic.setTheme('system')"><i class="ti ti-device-desktop" aria-hidden="true"></i>System</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-key" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Metadata Sources</h3>
+    <p class="sub">Used to auto-match discs to movie, TV, and album metadata.</p>
+    <div class="setting-row" style="display:block;">
+      <div class="label" style="margin-bottom:2px;">TMDB API key</div>
+      <div class="desc" style="margin-bottom:8px;">Required for movie and TV matching. MusicBrainz needs no key. Currently set via the <code>TMDB_API_KEY</code> environment variable — an editable settings-backed version is planned.</div>
+      <div style="display:flex; gap:8px;">
+        <input type="password" class="themed-field" value="{{ tmdb_key_masked }}" disabled style="flex:1; max-width:340px; font-size:13px; font-family:monospace;" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-folder" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Media Destinations</h3>
+    <p class="sub">Fixed bind mounts, set in docker-compose.yml — an in-app folder browser is planned so these can be changed without editing compose.</p>
+    <div class="path-row"><span class="cat-label"><i class="ti ti-movie" style="color:var(--text-muted);" aria-hidden="true"></i>Movies</span><code style="flex:1;">/GH_Server/Media/Movies</code></div>
+    <div class="path-row"><span class="cat-label"><i class="ti ti-device-tv" style="color:var(--text-muted);" aria-hidden="true"></i>TV</span><code style="flex:1;">/GH_Server/Media/TV</code></div>
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-tag" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>File &amp; Folder Naming</h3>
+    <p class="sub">Controls how ripped files are named and organized once transferred, so Plex or Jellyfin can read them correctly.</p>
+    <div class="setting-row">
+      <div>
+        <div class="label">Naming convention</div>
+        <div class="desc">Both media servers can read either convention — pick whichever your library already uses.</div>
+      </div>
+      <div class="pick-group">
+        <button id="pick-jellyfin" class="active" onclick="setNaming('jellyfin')">
+          <svg width="16" height="16" viewBox="0 0 72 72" aria-hidden="true">
+            <defs><linearGradient id="jfIconGrad" x1="47" x2="107" y1="84" y2="117" gradientTransform="translate(-34.501 -54)" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#AA5CC3"/><stop offset="1" stop-color="#00A4DC"/>
+            </linearGradient></defs>
+            <path fill="url(#jfIconGrad)" d="M24.711 49.158c-1.552-3.116 8.626-21.57 11.788-21.57 3.167.002 13.323 18.488 11.788 21.57-1.535 3.081-22.025 3.115-23.577 0z"/>
+            <path fill="url(#jfIconGrad)" fill-rule="evenodd" d="M.98 64.996C-3.695 55.606 26.977.001 36.5.001c9.533 0 40.153 55.713 35.527 64.995s-66.368 9.391-71.045 0m12.255-8.148c3.065 6.152 43.518 6.084 46.548 0 3.03-6.086-17.033-42.587-23.275-42.587S10.17 50.695 13.234 56.848z" clip-rule="evenodd"/>
+          </svg>
+          Jellyfin
+        </button>
+        <button id="pick-plex" onclick="setNaming('plex')">
+          <svg width="16" height="16" viewBox="0 0 512 512" aria-hidden="true">
+            <rect width="512" height="512" rx="15%" fill="#282a2d"/>
+            <path d="M256 70H148l108 186-108 186h108l108-186z" fill="#e5a00d"/>
+          </svg>
+          Plex
+        </button>
+      </div>
+    </div>
+    <p class="label" style="margin: 12px 0 6px;">Preview</p>
+    <div class="preview-box" id="namingPreview"></div>
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-tool" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Ripping &amp; Encoding Tools</h3>
+    <p class="sub">The underlying tools Disc-O-Matic drives — kept separate from the app's own version.</p>
+
+    <div class="tool-box">
+      <div class="tool-top">
+        <div class="tool-name"><i class="ti ti-disc" style="color:var(--wordmark); font-size:16px;" aria-hidden="true"></i>MakeMKV <span class="ver">{{ makemkv_version }}</span></div>
+      </div>
+      <div class="tool-note">
+        <i class="ti ti-alert-triangle" style="color:var(--amber); font-size:14px; flex-shrink:0;" aria-hidden="true"></i>
+        MakeMKV's free beta key expires roughly monthly — key renewal isn't automated yet, see the project README for the manual steps.
+      </div>
+    </div>
+
+    <div class="tool-box">
+      <div class="tool-top">
+        <div class="tool-name"><i class="ti ti-video" style="color:var(--wordmark); font-size:16px;" aria-hidden="true"></i>HandBrake CLI <span class="ver">not yet installed</span></div>
+      </div>
+      <div class="tool-note">
+        <i class="ti ti-info-circle" style="font-size:14px; flex-shrink:0;" aria-hidden="true"></i>
+        Encoding (workflow step 12) hasn't been built yet — HandBrake isn't in the container image.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-refresh" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Updates</h3>
+    <div class="version-box">
+      <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-primary);">
+        <i class="ti ti-info-circle" style="font-size:16px; color:var(--text-muted);" aria-hidden="true"></i>
+        Running <b>{{ app_version }}</b> — update checking isn't built yet
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  var previews = {
+    jellyfin: 'Movie:  <b>Toy Story (1995)/</b>Toy Story (1995).mkv\nSeries: <b>SpongeBob SquarePants (1999)/Season 01/</b>SpongeBob SquarePants (1999) S01E01 Help Wanted.mkv\nMusic:  <b>The Charlie Daniels Band/16 Biggest Hits/</b>01 - The Devil Went Down to Georgia.flac',
+    plex:     'Movie:  <b>Toy Story (1995)/</b>Toy Story (1995).mkv\nSeries: <b>SpongeBob SquarePants (1999)/Season 01/</b>SpongeBob SquarePants (1999) - s01e01 - Help Wanted.mkv\nMusic:  <b>The Charlie Daniels Band/16 Biggest Hits/</b>01 - The Devil Went Down to Georgia.flac'
+  };
+  function setNaming(mode) {
+    ['jellyfin', 'plex'].forEach(function (m) {
+      document.getElementById('pick-' + m).classList.toggle('active', m === mode);
+    });
+    document.getElementById('namingPreview').innerHTML = previews[mode].replace(/\n/g, '<br>');
+  }
+  setNaming('jellyfin');
+</script>
+{% endblock %}

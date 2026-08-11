@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Disc-O-Matic — History{% endblock %}
+{% block content %}
+<div class="page">
+
+  <p class="page-title">History</p>
+  <p class="page-sub">Every completed and failed job, kept for reference.</p>
+
+  <div style="display:flex; gap:8px; margin-bottom:1rem;">
+    <input type="text" id="search" oninput="filterHistory()" placeholder="Search by disc name or title" class="themed-field" style="flex:1; font-size:13px;" />
+    <div class="select-wrap">
+      <select id="statusFilter" onchange="filterHistory()" class="themed-field" style="width:auto; font-size:13px;">
+        <option value="all">All statuses</option>
+        <option value="completed">Completed</option>
+        <option value="failed">Failed</option>
+      </select>
+      <i class="ti ti-chevron-down" aria-hidden="true"></i>
+    </div>
+    <div class="select-wrap">
+      <select id="typeFilter" onchange="filterHistory()" class="themed-field" style="width:auto; font-size:13px;">
+        <option value="all">All types</option>
+        <option value="Audio CD">Audio CD</option>
+        <option value="DVD">DVD</option>
+        <option value="Blu-ray">Blu-ray</option>
+      </select>
+      <i class="ti ti-chevron-down" aria-hidden="true"></i>
+    </div>
+  </div>
+
+  <div id="history-list">
+    {% for h in history %}
+    <div class="item-card" data-status="{{ h.status }}" data-media="{{ h.media }}" data-search="{{ (h.disc_label or '') ~ ' ' ~ (h.matched_title or '') | lower }}">
+      <i class="ti {{ h.icon }} icon" aria-hidden="true"></i>
+      <div class="main">
+        <p class="title {{ 'muted' if not h.disc_label }}">
+          {{ h.disc_label or ('Audio CD' if h.media == 'Audio CD' else '(No disc label)') }}
+          {% if h.matched_title %}<span style="color:var(--text-muted); font-weight:400; font-style:normal;"> · {{ h.matched_title }}</span>{% endif %}
+        </p>
+        <p class="detail">{{ h.media }} · {{ h.date }} · {{ h.info }}</p>
+      </div>
+      <span class="badge {{ 'completed' if h.status == 'completed' else 'failed' }}">{{ h.status }}</span>
+      <a href="/history/{{ h.id }}" class="view-link">Details<i class="ti ti-arrow-right" style="font-size:14px;" aria-hidden="true"></i></a>
+    </div>
+    {% endfor %}
+  </div>
+  <p id="noResults" style="display:none; color:var(--text-muted); font-size:13px;">No jobs match your filters.</p>
+
+</div>
+<div class="footer-bar">
+  <span>Showing <span id="count">{{ history|length }}</span> of {{ history|length }} jobs</span>
+  <button style="width:auto; padding:2px 12px; font-size:12px;">Load more</button>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  function filterHistory() {
+    var q = document.getElementById('search').value.toLowerCase();
+    var statusF = document.getElementById('statusFilter').value;
+    var typeF = document.getElementById('typeFilter').value;
+    var visible = 0;
+    document.querySelectorAll('#history-list .item-card').forEach(function (card) {
+      var matchesQ = !q || card.getAttribute('data-search').includes(q);
+      var matchesStatus = statusF === 'all' || card.getAttribute('data-status') === statusF;
+      var matchesType = typeF === 'all' || card.getAttribute('data-media') === typeF;
+      var show = matchesQ && matchesStatus && matchesType;
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    document.getElementById('count').textContent = visible;
+    document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+  }
+</script>
+{% endblock %}

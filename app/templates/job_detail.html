@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Disc-O-Matic — {{ job.title }}{% endblock %}
+{% block content %}
+<div class="page">
+
+  <a href="/jobs" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i>Back to jobs</a>
+
+  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:2px;">
+    <i class="ti ti-device-tv" style="font-size:22px; color:var(--wordmark);" aria-hidden="true"></i>
+    <span style="font-size:19px; font-weight:700; color:var(--text-primary);">{{ job.title }}</span>
+    <span class="badge {{ job.status_class }}">{{ job.status_label }}</span>
+  </div>
+  <p class="meta-line" style="margin:0 0 1.1rem;"><i>{{ job.device }}</i> &nbsp;·&nbsp; {{ job.media_type }}</p>
+
+  <div class="card">
+    <h3><i class="ti ti-list-search" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Identify this disc</h3>
+    <p class="sub">Select Movie or Series, then confirm the matching entry from TMDB/TheDiscDB.</p>
+
+    <div style="display:flex; gap:10px; margin-bottom:14px;">
+      <button id="type-movie" class="type-btn {{ 'active' if job.candidate_type == 'movie' }}" onclick="setCandidateType('movie')" style="flex:1; padding:10px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:13px;"><i class="ti ti-movie" aria-hidden="true"></i>Movie</button>
+      <button id="type-series" class="type-btn {{ 'active' if job.candidate_type == 'series' }}" onclick="setCandidateType('series')" style="flex:1; padding:10px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:13px;"><i class="ti ti-device-tv" aria-hidden="true"></i>Series</button>
+    </div>
+
+    <div class="encode-option selected" style="cursor:default;">
+      <div class="opt-title" style="font-size:14px;">{{ job.match_title }}</div>
+      <div class="opt-desc">{{ job.match_source }} · {{ job.match_score }}</div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <input type="text" class="themed-field" placeholder="Search manually if none of these are right" style="flex:1;" />
+      <button style="width:auto; padding:0 16px;">Search</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-list-check" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Titles to rip</h3>
+    <p class="sub">Choose which titles to rip.</p>
+    <div class="row-head">
+      <span class="col-check"></span>
+      <span style="width:64px; flex-shrink:0;">Title</span>
+      <span class="col-dur" style="text-align:left;">Length</span>
+      <span style="width:60px; flex-shrink:0;">Season</span>
+      <span style="width:50px; flex-shrink:0;">Ep(s)</span>
+      <span class="col-title">Episode title</span>
+      <span style="width:60px; flex-shrink:0;"></span>
+    </div>
+    {% for t in job.titles %}
+    <div class="row-item {{ 'skipped' if t.skipped }}">
+      <span class="col-check"><input type="checkbox" {{ 'checked' if t.selected }} onchange="this.closest('.row-item').classList.toggle('skipped', !this.checked)" /></span>
+      <span style="width:64px; flex-shrink:0;">Title {{ t.id }}</span>
+      <span class="col-dur" style="text-align:left;">{{ t.length }}</span>
+      {% if t.skipped %}
+      <span style="width:60px; flex-shrink:0;"></span>
+      <span style="width:50px; flex-shrink:0;"></span>
+      <span class="col-title" style="color:var(--text-muted);">Skipped</span>
+      {% else %}
+      <span style="width:60px; flex-shrink:0;"><input type="text" class="themed-field" value="{{ t.season }}" style="padding:5px 6px; font-size:12px;" /></span>
+      <span style="width:50px; flex-shrink:0;"><input type="text" class="themed-field" value="{{ t.episodes }}" style="padding:5px 6px; font-size:12px;" /></span>
+      <span class="col-title"><input type="text" class="themed-field" value="{{ t.episode_title }}" style="padding:5px 6px; font-size:12px;" /></span>
+      {% endif %}
+      <span style="width:60px; flex-shrink:0; display:flex; gap:4px;">
+        <button onclick="openPreview('{{ t.id }}', '{{ t.episode_title|default('Title ' ~ t.id, true) }}')" style="width:26px; padding:0;" title="Preview"><i class="ti ti-eye" style="font-size:14px;" aria-hidden="true"></i></button>
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3><i class="ti ti-settings" style="font-size:15px; color:var(--wordmark);" aria-hidden="true"></i>Encoding</h3>
+    <p class="sub">Source: {{ job.source_summary }}</p>
+
+    <div id="encodeOptions">
+      <div class="encode-option" data-value="direct" onclick="selectEncoding('direct')">
+        <div class="opt-title"><i class="ti ti-copy" style="font-size:15px;" aria-hidden="true"></i>Direct copy</div>
+        <div class="opt-desc">No re-encode — fastest, identical quality, largest file</div>
+      </div>
+      <div class="encode-option" data-value="h264" onclick="selectEncoding('h264')">
+        <div class="opt-title"><i class="ti ti-video" style="font-size:15px;" aria-hidden="true"></i>H.264 balanced <span class="badge ok" style="margin-left:6px;">Recommended</span></div>
+        <div class="opt-desc">Good compatibility, moderate file size reduction</div>
+      </div>
+      <div class="encode-option" data-value="h265" onclick="selectEncoding('h265')">
+        <div class="opt-title"><i class="ti ti-video" style="font-size:15px;" aria-hidden="true"></i>H.265 efficient</div>
+        <div class="opt-desc">Smaller files, slower encode, needs newer playback devices</div>
+      </div>
+      <div class="encode-option" data-value="custom" onclick="selectEncoding('custom')">
+        <div class="opt-title"><i class="ti ti-adjustments" style="font-size:15px;" aria-hidden="true"></i>Custom</div>
+        <div class="opt-desc">Set your own HandBrake/ffmpeg parameters</div>
+      </div>
+    </div>
+
+    <div id="customPanel" class="encode-custom-panel" style="display:none;">
+      <div class="encode-field-grid">
+        <div class="encode-field">
+          <label class="field-label">Video codec</label>
+          <div class="select-wrap"><select class="themed-field"><option>H.264</option><option>H.265</option></select><i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+        </div>
+        <div class="encode-field">
+          <label class="field-label">Audio codec</label>
+          <div class="select-wrap"><select class="themed-field"><option>AAC</option><option>AC3</option><option>FLAC</option></select><i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+        </div>
+      </div>
+      <label class="field-label" style="margin-bottom:6px;">Quality (CRF) — lower is higher quality, larger file</label>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <input type="range" min="14" max="30" value="22" id="crfSlider" oninput="document.getElementById('crfVal').textContent = this.value" style="flex:1;" />
+        <span id="crfVal" style="font-size:14px; color:var(--text-primary); width:24px; text-align:right;">22</span>
+      </div>
+      <div class="encode-field-grid" style="margin-bottom:0;">
+        <div class="encode-field">
+          <label class="field-label">Container</label>
+          <div class="select-wrap"><select class="themed-field"><option>MKV</option><option>MP4</option></select><i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+        </div>
+        <div class="encode-field">
+          <label class="field-label">Subtitles</label>
+          <div class="select-wrap"><select class="themed-field"><option>Include all</option><option>English only</option><option>None</option></select><i class="ti ti-chevron-down" aria-hidden="true"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:flex-end; gap:10px;">
+    <button style="width:auto; padding:0 18px;">Save draft</button>
+    <button class="btn-primary" style="width:auto; padding:0 18px; font-weight:500;">Start rip</button>
+  </div>
+
+</div>
+
+<div id="previewModal" class="modal-backdrop" onclick="if(event.target===this) closePreview();">
+  <div class="modal-box">
+    <p id="previewTitle" style="margin:0 0 8px; font-size:14px; font-weight:500; color:var(--text-primary);">Preview</p>
+    <p style="margin:0 0 14px; font-size:12.5px; color:var(--text-muted);">Video preview isn't available yet — it needs a live MakeMKV scan integration, which hasn't been built. This dialog is a placeholder for where the preview player will go.</p>
+    <div style="display:flex; justify-content:flex-end;">
+      <button onclick="closePreview()" style="width:auto; padding:0 16px;">Close</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+  function setCandidateType(type) {
+    document.getElementById('type-movie').classList.toggle('active', type === 'movie');
+    document.getElementById('type-series').classList.toggle('active', type === 'series');
+  }
+  document.querySelectorAll('.type-btn').forEach(function (b) {
+    if (b.classList.contains('active')) b.style.background = 'var(--wordmark)';
+  });
+
+  function selectEncoding(value) {
+    document.querySelectorAll('#encodeOptions .encode-option').forEach(function (opt) {
+      opt.classList.toggle('selected', opt.getAttribute('data-value') === value);
+    });
+    document.getElementById('customPanel').style.display = value === 'custom' ? 'block' : 'none';
+  }
+  selectEncoding('{{ job.encoding_selected }}');
+
+  function openPreview(id, name) {
+    document.getElementById('previewTitle').textContent = 'Preview — Title ' + id + (name ? ' (' + name + ')' : '');
+    document.getElementById('previewModal').classList.add('open');
+  }
+  function closePreview() {
+    document.getElementById('previewModal').classList.remove('open');
+  }
+</script>
+<style>
+  .type-btn.active { background: var(--wordmark) !important; border-color: var(--wordmark) !important; color: #fff2e0 !important; }
+</style>
+{% endblock %}

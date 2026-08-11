@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Disc-O-Matic — Dashboard{% endblock %}
+{% block content %}
+<div class="page">
+
+  <div class="metric-grid">
+    <div class="metric-card" style="--metric-color: var(--blue);">
+      <div class="label">Pending Jobs</div>
+      <div class="value">{{ pending_count }}</div>
+    </div>
+    <div class="metric-card" style="--metric-color: var(--red);">
+      <div class="label">Active Jobs</div>
+      <div class="value">{{ active_jobs_sample }}</div>
+    </div>
+    <div class="metric-card" style="--metric-color: var(--amber);">
+      <div class="label">Needs Attention</div>
+      <div class="value">{{ needs_attention_count }}</div>
+    </div>
+    <div class="metric-card" style="--metric-color: var(--green);">
+      <div class="label">Completed Jobs <span class="sub-label">(7-day record)</span></div>
+      <div class="value">{{ completed_jobs_sample }}</div>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+    <p class="page-title" style="margin:0;">Optical drives</p>
+    <div class="pick-group">
+      <button id="view-list" onclick="setDriveView('list')" style="width:36px; padding:0;"><i class="ti ti-list" aria-hidden="true"></i></button>
+      <button id="view-detailed" class="active" onclick="setDriveView('detailed')" style="width:36px; padding:0;"><i class="ti ti-align-left" aria-hidden="true"></i></button>
+      <button id="view-grid" onclick="setDriveView('grid')" style="width:36px; padding:0;"><i class="ti ti-layout-grid" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <div id="drives" class="view-detailed">
+    {% for d in drives %}
+    <div class="item-card {{ 'invalid' if d.invalid }}">
+      <i class="ti {{ d.icon }} icon {{ 'invalid' if d.invalid }}" aria-hidden="true"></i>
+      <div class="main">
+        <p class="title {{ d.title_class }}">{{ d.title }}</p>
+        <p class="path">{{ d.device }}</p>
+        <p class="detail drive-detail-line">{{ d.media_label or '' }}</p>
+        {% if d.matched_line %}<p class="detail drive-detail-line">{{ d.matched_line }}</p>{% endif %}
+        {% if d.extra_line %}<p class="detail {{ 'invalid' if d.invalid }} drive-detail-line">{{ d.extra_line }}</p>{% endif %}
+      </div>
+      <div class="side">
+        {% if d.badge_text %}<span class="badge {{ d.badge_class }}">{{ d.badge_text }}</span>{% endif %}
+        {% if d.has_link %}<a href="/jobs" class="view-link">View job<i class="ti ti-arrow-right" style="font-size:14px;" aria-hidden="true"></i></a>{% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p style="color:var(--text-muted); font-size:13px;">No optical drives detected.</p>
+    {% endfor %}
+  </div>
+
+</div>
+
+<div class="footer-bar">
+  <span>{{ drives|length }} drive{{ 's' if drives|length != 1 else '' }} detected</span>
+  <span><i class="ti ti-circle-check ok" aria-hidden="true"></i> Up to date · {{ app_version }}</span>
+</div>
+{% endblock %}
+{% block scripts %}
+<style>
+  #drives.view-list .drive-detail-line { display: none; }
+  #drives.view-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  #drives.view-grid .item-card { flex-direction: column; align-items: flex-start; gap: 4px; }
+  #drives.view-grid .item-card .side { flex-direction: row; width: 100%; justify-content: space-between; margin-top: 6px; }
+  #drives.view-grid .drive-detail-line { display: none; }
+</style>
+<script>
+  function setDriveView(mode) {
+    document.getElementById('drives').className = 'view-' + mode;
+    ['list', 'detailed', 'grid'].forEach(function (m) {
+      document.getElementById('view-' + m).classList.toggle('active', m === mode);
+    });
+  }
+</script>
+{% endblock %}
